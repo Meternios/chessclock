@@ -7,7 +7,7 @@
 const int rs = 8, rw = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, rw, d4, d5, d6, d7);
 
-int minutesOfeachPlayer = 10; //To be changed
+int minutesOfeachPlayer = 1; //To be changed
 
 int time = minutesOfeachPlayer * 60;
 
@@ -69,6 +69,13 @@ bool setTimes(void *){
     if(secondsP1 == -1){
       secondsP1 = 59;
       minutesP1--;
+      if(minutesP1 == -1){
+        lcd.setCursor(0, 0);
+        lcd.print("Green lost");
+        lcd.setCursor(0, 1);
+        lcd.print("Red won congrats");
+        return false;
+      }
     }
     if(secondsP1 == 9){ //If seconds below 10
       lcd.setCursor(3, 1);
@@ -102,6 +109,13 @@ bool setTimes(void *){
     if(secondsP2 == -1){
       secondsP2 = 59;
       minutesP2--;
+      if(minutesP2 == -1){
+        lcd.setCursor(0, 0);
+        lcd.print("Red lost :(");
+        lcd.setCursor(0, 1);
+        lcd.print("Green won :):):)");
+        return false;
+      }
     }
     if(secondsP2 == 9){ //If seconds below 10
       lcd.setCursor(14, 1);
@@ -152,7 +166,7 @@ void resetTimeAndLcd(){
 void resetLcd(){
   //Title
   lcd.setCursor(0, 0);
-  lcd.print("Schach Uhr :)");
+  lcd.print("Schach Uhr");
   
   //Player 1
   if(minutesP1 < 10){
