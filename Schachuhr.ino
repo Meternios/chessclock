@@ -1,13 +1,12 @@
 // include the library code:
 #include <LiquidCrystal.h>
-#include <arduino-timer.h>
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 const int rs = 8, rw = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, rw, d4, d5, d6, d7);
 
-int minutesOfeachPlayer = 1; //To be changed
+int minutesOfeachPlayer = 20; //To be changed
 
 int time = minutesOfeachPlayer * 60;
 
@@ -19,7 +18,6 @@ int secondsP2 = 0;
 
 int currentPlayer = 0; //Set to zero so the clock does not start until a button is pressed
 
-auto timer = timer_create_default();
 
 int inputLeft = 0;
 int inputRight = 0;
@@ -35,14 +33,34 @@ void setup() {
   //Input Pins
   pinMode(pinLeft,INPUT);
   pinMode(pinRight,INPUT);
+
+  //Output Pins
+  pinMode(A0,OUTPUT);
+  pinMode(A1,OUTPUT);
+  pinMode(A2,OUTPUT);
+  pinMode(A3,OUTPUT);
+  pinMode(A4,OUTPUT);
+  pinMode(A5,OUTPUT);
   
-  //Call function to setTime all seconds
-  timer.every(1000, setTimes);
+
+  //Timer 1 definieren
+  noInterrupts();     //Alle Interupts temporär abschalten
+  TCCR1A = 0;
+  TCCR1B = 0;
+
+  TCNT1 = 3036;            //Timer nach Formel vorladen
+  TCCR1B |= (1 << CS12);    //256 als Prescale-Wert spezifizieren
+  TIMSK1 |= (1 << TOIE1);   //Timer Overflow Intrrupt aktivieren
+  interrupts();             //alle Interrupts aktivieren
 }
 
+ISR(TIMER1_OVF_vect)      //Call function setTimes with ISR
+{
+  TCNT1 = 3036;          //Zaehler erneut vorbelegen
+  setTimes();
+}
 
 void loop() {
-  timer.tick();
   
   inputLeft = digitalRead(pinLeft);
   inputRight = digitalRead(pinRight);
@@ -56,22 +74,16 @@ void loop() {
   }
 
   if(inputRight == HIGH && inputLeft == HIGH){
-    //Cancel all active Intervalls
-    if (!timer.empty()) {
-      timer.cancel();
-    }
     
     //Reset
-    resetTimeAndLcd();
+    resetTime();
+    resetLcd();
+    delay(1000);
 
-    delay(1500);
-
-    //Call function to setTime all seconds
-    timer.every(1000, setTimes);
   }
 }
 
-bool setTimes(void *){
+bool setTimes(){
   if(currentPlayer == 1){
     //If Minute is over
     if(secondsP1 == -1){
@@ -83,6 +95,8 @@ bool setTimes(void *){
         lcd.print("Green lost :(");
         lcd.setCursor(0, 1);
         lcd.print("Red won :)");
+        noInterrupts();
+        resetTime();
         return false;
       }
     }
@@ -124,6 +138,8 @@ bool setTimes(void *){
         lcd.print("Red lost :(");
         lcd.setCursor(0, 1);
         lcd.print("Green won :)");
+        noInterrupts();
+        resetTime();
         return false;
       }
     }
@@ -159,7 +175,7 @@ bool setTimes(void *){
   return true;
 }
 
-void resetTimeAndLcd(){
+void resetTime(){
   time = minutesOfeachPlayer * 60;
 
   minutesP1 = time / 60;
@@ -170,7 +186,6 @@ void resetTimeAndLcd(){
   
   currentPlayer = 0; //Set to zero so the clock does not start until a button is pressed
 
-  resetLcd();
 }
 
 void resetLcd(){
