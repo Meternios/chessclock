@@ -17,7 +17,7 @@ int minutesP2 = time / 60;
 int secondsP1 = 0;
 int secondsP2 = 0;
 
-int currentPlayer = 2; //Set to two so the clock does not start until a button is pressed
+int currentPlayer = 0; //Set to zero so the clock does not start until a button is pressed
 
 auto timer = timer_create_default();
 
@@ -48,11 +48,11 @@ void loop() {
   inputRight = digitalRead(pinRight);
 
   if(inputLeft == HIGH){
-    currentPlayer = 1;
+    currentPlayer = 2;
   }
 
   if(inputRight == HIGH){
-    currentPlayer = 0;
+    currentPlayer = 1;
   }
 
   if(inputRight == HIGH && inputLeft == HIGH){
@@ -60,20 +60,24 @@ void loop() {
     resetTimeAndLcd();
 
     delay(1500);
+
+    //Call function to setTime all seconds
+    timer.every(1000, setTimes);
   }
 }
 
 bool setTimes(void *){
-  if(currentPlayer == 0){
+  if(currentPlayer == 1){
     //If Minute is over
     if(secondsP1 == -1){
       secondsP1 = 59;
       minutesP1--;
       if(minutesP1 == -1){
+        lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Green lost");
+        lcd.print("Green lost :(");
         lcd.setCursor(0, 1);
-        lcd.print("Red won congrats");
+        lcd.print("Red won :)");
         return false;
       }
     }
@@ -104,16 +108,17 @@ bool setTimes(void *){
     lcd.print(secondsP1);
     
     secondsP1--;
-  }else if(currentPlayer == 1){
+  }else if(currentPlayer == 2){
     //If Minute is over
     if(secondsP2 == -1){
       secondsP2 = 59;
       minutesP2--;
       if(minutesP2 == -1){
+        lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Red lost :(");
         lcd.setCursor(0, 1);
-        lcd.print("Green won :):):)");
+        lcd.print("Green won :)");
         return false;
       }
     }
@@ -158,12 +163,13 @@ void resetTimeAndLcd(){
   secondsP1 = 0;
   secondsP2 = 0;
   
-  currentPlayer = 2; //Set to two so the clock does not start until a button is pressed
+  currentPlayer = 0; //Set to zero so the clock does not start until a button is pressed
 
   resetLcd();
 }
 
 void resetLcd(){
+  lcd.clear();
   //Title
   lcd.setCursor(0, 0);
   lcd.print("Schach Uhr");
