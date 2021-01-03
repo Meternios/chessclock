@@ -56,6 +56,9 @@ void loop() {
   }
 
   if(inputRight == HIGH && inputLeft == HIGH){
+    //Cancel all Intervalls
+    timer.cancel();
+    
     //Reset
     resetTimeAndLcd();
 
